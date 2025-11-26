@@ -1,0 +1,9 @@
+services:
+  webapp:
+    image: ${DOCKER_REGISTRY-}webapp
+    build:
+      context: WebApp
+      dockerfile: Dockerfile
+    ports:
+      - 5000:8080
+      - 5001:8081
