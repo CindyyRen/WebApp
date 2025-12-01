@@ -15,6 +15,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         // EF Core 提供的一个方法，可以扫描指定程序集（Assembly）里所有实现了 IEntityTypeConfiguration<T> 的配置类
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+
     }
+
 
 }

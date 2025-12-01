@@ -6,6 +6,7 @@ namespace WebApp.Database.Configurations;
 
 public sealed class HabitConfiguration : IEntityTypeConfiguration<Habit>
 {
+    //Configure是IEntityTypeConfiguration里写好的方法。
     public void Configure(EntityTypeBuilder<Habit> builder)
     {
         builder.HasKey(h => h.Id);
@@ -22,5 +23,8 @@ public sealed class HabitConfiguration : IEntityTypeConfiguration<Habit>
             targetBuilder.Property(t => t.Unit).HasMaxLength(100);
         });
         builder.OwnsOne(h => h.Milestone);
+
+        // Seed 数据 (注意：枚举转 int，owned 类型扁平化)
+      
     }
 }

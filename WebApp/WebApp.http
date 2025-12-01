@@ -4,3 +4,33 @@ GET {{WebApp_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+GET {{WebApp_HostAddress}}/api/habits
+Accept: application/json
+
+###
+GET {{WebApp_HostAddress}}/api/habits/4fda6fa1-627e-4576-8297-e36a74db4ccb
+Accept: application/json
+
+###
+POST {{WebApp_HostAddress}}/api/habits
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "每日散步",
+  "description": "每天至少散步20分钟",
+  "type": 1,
+  "frequency": {
+    "type": 1,
+    "timesPerPeriod": 1
+  },
+  "target": {
+    "value": 20,
+    "unit": "分钟"
+  },
+  "endDate": null,
+  "milestone": {
+    "target": 50,
+    "current": 0
+  }
+}

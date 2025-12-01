@@ -5,6 +5,7 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/src/">
+    <File Path="Directory.Packages.props" />
     <Project Path="WebApp/WebApp.csproj" />
   </Folder>
   <Project Path="docker-compose.dcproj">
