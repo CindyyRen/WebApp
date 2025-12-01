@@ -23,8 +23,10 @@ public sealed class HabitConfiguration : IEntityTypeConfiguration<Habit>
             targetBuilder.Property(t => t.Unit).HasMaxLength(100);
         });
         builder.OwnsOne(h => h.Milestone);
+        //Habit 有很多 Tags，Tag 也可以有很多 Habits（虽然没有导航属性），多对多关系通过 HabitTag 这张表实现
+        builder.HasMany(h => h.Tags)
+            .WithMany()
+            .UsingEntity<HabitTag>();
 
-        // Seed 数据 (注意：枚举转 int，owned 类型扁平化)
-      
     }
 }

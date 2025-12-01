@@ -8,6 +8,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 //sealed 表示 这个类不能被再继承
 {
     public DbSet<Habit> Habits { get; set; }
+    public DbSet<Tag> Tags { get; set; }
+    public DbSet<HabitTag> HabitTag { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // 配置表、字段、关系、默认值等

@@ -34,3 +34,6 @@ Accept: application/json
     "current": 0
   }
 }
+###
+DELETE {{WebApp_HostAddress}}/api/habits/4fda6fa1-627e-4576-8297-e36a74db4ccb
+Accept: application/json
