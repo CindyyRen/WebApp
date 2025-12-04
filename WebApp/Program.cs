@@ -1,9 +1,13 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Scalar.AspNetCore;
 using WebApp.Database;
+using WebApp.DTOs.Habits;
 using WebApp.Entities;
 using WebApp.Extensions;
+using WebApp.middleware;
+using WebApp.Services.Sorting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,18 @@ builder.Services.AddControllers(options =>
 })
 .AddNewtonsoftJson()
 .AddXmlSerializerFormatters();//XmlSerializer 把你的对象（比如 DTO）转成 XML 字符串返回给客户端
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+//AddProblemDetails() 是 ASP.NET Core 8+ 的新统一错误处理机制。
+//当应用返回错误（400、404、500 等）时，会返回符合 RFC 7807 的 application/problem+json。
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+    };
+});
 
 builder.Services.AddOpenApi();
 
@@ -29,69 +45,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     .UseSnakeCaseNamingConvention()
 );
 
-
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddTransient<SortMappingProvider>();
+builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ =>
+    HabitMappings.SortMapping);
 WebApplication app = builder.Build();
-// 自动 seed 数据
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    //await db.Database.MigrateAsync(); // 先确保数据库更新到最新 migration
 
-    if (!await db.Habits.AnyAsync())
-    {
-        db.Habits.AddRange(
-            new Habit
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "每日阅读",
-                Description = "每天至少阅读30分钟",
-                Type = HabitType.Binary,
-                Frequency = new Frequency { Type = FrequencyType.Daily, TimesPerPeriod = 1 },
-                Target = new Target { Value = 30, Unit = "分钟" },
-                Status = HabitStatus.Ongoing,
-                IsArchived = false,
-                Milestone = new Milestone { Target = 100, Current = 15 },
-                CreatedAtUtc = DateTime.UtcNow.AddDays(-15),
-                UpdatedAtUtc = DateTime.UtcNow.AddDays(-1),
-                LastCompletedAtUtc = DateTime.UtcNow.AddDays(-1)
-            },
-            new Habit
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "健身打卡",
-                Description = "每周至少去健身房3次",
-                Type = HabitType.Measurable,
-                Frequency = new Frequency { Type = FrequencyType.Weekly, TimesPerPeriod = 3 },
-                Target = new Target { Value = 3, Unit = "次" },
-                Status = HabitStatus.Ongoing,
-                IsArchived = false,
-                EndDate = new DateOnly(2025, 12, 31),
-                Milestone = new Milestone { Target = 150, Current = 42 },
-                CreatedAtUtc = DateTime.UtcNow.AddDays(-30),
-                UpdatedAtUtc = DateTime.UtcNow.AddDays(-2),
-                LastCompletedAtUtc = DateTime.UtcNow.AddDays(-2)
-            },
-            new Habit
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "写作计划",
-                Description = "每月完成2篇文章",
-                Type = HabitType.Measurable,
-                Frequency = new Frequency { Type = FrequencyType.Monthly, TimesPerPeriod = 2 },
-                Target = new Target { Value = 2, Unit = "篇" },
-                Status = HabitStatus.Completed,
-                IsArchived = true,
-                EndDate = new DateOnly(2025, 10, 31),
-                Milestone = new Milestone { Target = 24, Current = 24 },
-                CreatedAtUtc = DateTime.UtcNow.AddDays(-365),
-                UpdatedAtUtc = DateTime.UtcNow.AddDays(-60),
-                LastCompletedAtUtc = DateTime.UtcNow.AddDays(-60)
-            }
-        );
-
-        await db.SaveChangesAsync();
-    }
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -104,7 +64,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseExceptionHandler();
 app.MapControllers();
 
 await app.RunAsync();
