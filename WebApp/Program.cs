@@ -1,12 +1,14 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Newtonsoft.Json.Serialization;
 using Scalar.AspNetCore;
 using WebApp.Database;
 using WebApp.DTOs.Habits;
 using WebApp.Entities;
 using WebApp.Extensions;
 using WebApp.middleware;
+using WebApp.Services;
 using WebApp.Services.Sorting;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -17,7 +19,8 @@ builder.Services.AddControllers(options =>
 {
     options.ReturnHttpNotAcceptable = true;
 })
-.AddNewtonsoftJson()
+.AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver =
+    new CamelCasePropertyNamesContractResolver())
 .AddXmlSerializerFormatters();//XmlSerializer 把你的对象（比如 DTO）转成 XML 字符串返回给客户端
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -50,6 +53,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddTransient<SortMappingProvider>();
 builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ =>
     HabitMappings.SortMapping);
+builder.Services.AddTransient<DataShapingService>();
 WebApplication app = builder.Build();
 
 
